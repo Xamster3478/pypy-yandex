@@ -1,47 +1,51 @@
-<script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+<script>
+  const apiKey = '167c4d4a5bf332d6538f2476';
+
+  let amount1 = 1;
+  let amount2 = 0;
+  let rate = 1;
+  let selectedCurrency1 = 'USD';
+  let selectedCurrency2 = 'EUR';
+  let options = ['USD', 'EUR', 'GBP', 'RUB'];
+
+  async function loadRate() {
+    const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${selectedCurrency1}?apiKey=${apiKey}`);
+    const data = await response.json();
+    rate = data.rates[selectedCurrency2];
+    convert1to2();
+  }
+
+  function convert1to2() {
+    amount2 = (amount1 * rate).toFixed(2);
+  }
+
+  function convert2to1() {
+    amount1 = (amount2 / rate).toFixed(2);
+  }
+
+  $: if(selectedCurrency1 && selectedCurrency2) loadRate();
+
+  $: if ($$self.$$.dirty & /*amount1*/ 1) {
+    convert1to2();
+  }
+
+  $: if ($$self.$$.dirty & /*amount2*/ 2) {
+    convert2to1();
+  }
 </script>
 
-<main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+<div>
+  <select bind:value={selectedCurrency1}>
+    {#each options as option}
+      <option>{option}</option>
+    {/each}
+  </select>
+  <input type="number" bind:value={amount1} on:input={convert1to2}/>
 
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
-</main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
+  <select bind:value={selectedCurrency2}>
+    {#each options as option}
+      <option>{option}</option>
+    {/each}
+  </select>
+  <input type="number" bind:value={amount2} on:input={convert2to1}/>
+</div>
